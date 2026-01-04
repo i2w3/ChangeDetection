@@ -47,8 +47,8 @@ if __name__ == "__main__":
         # 在 SE2020 中的 mask_bin，1 表示未变化，0 表示有变化，但是不包含类别信息，所以需要根据 mask_1 和 mask_2 重新计算地面变化
         pred.mask_bin = pred.mask_1 + pred.mask_2
         pred.mask_bin[pred.mask_bin != 0] = 255
+        print(f"mIOU: {calc_mIOU(pred.mask_bin, sample_enhance.img_ref, [0,255]):.4f}") # mIOU 计算仅支持强迫关注地面变化的情况
 
-    print(f"mIOU: {calc_mIOU(pred.mask_bin, sample_enhance.img_ref, [0,255]):.4f}")
     fig, axes = plt.subplots(2, 3, figsize=(15, 10))
     ## Row 1
     axes[0,0].imshow(cv2.cvtColor(sample_enhance.img_A, cv2.COLOR_BGR2RGB))
