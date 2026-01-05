@@ -38,6 +38,7 @@ class ORTRunner:
             ('TensorrtExecutionProvider', {
                 'device_id': 0,
                 'trt_max_workspace_size': 4 * 1024 * 1024 * 1024, # 4 GB
+                'trt_int8_enable': False,
                 'trt_fp16_enable': True,
                 'trt_engine_cache_enable': True,
                 'trt_engine_cache_path': f'{self.model_path.parent}/trt_cache',

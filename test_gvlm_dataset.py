@@ -1,4 +1,5 @@
 import json
+import time
 
 import cv2
 import matplotlib.pyplot as plt
@@ -7,22 +8,21 @@ import numpy as np
 from src import *
 
 
-def calc_mIOU(pred_mask:np.ndarray, true_mask:np.ndarray, cls_list:list[int]) -> float:
+def calc_mIoU(pred_mask:np.ndarray, true_mask:np.ndarray, cls_list:list[int]) -> float:
+    if pred_mask.shape != true_mask.shape:
+        print("Warning: Resizing true_mask to match pred_mask shape for mIoU calculation.")
+        true_mask = cv2.resize(true_mask, (pred_mask.shape[1], pred_mask.shape[0]), interpolation=cv2.INTER_NEAREST)
     iou_list = []
     for cls in cls_list:
         pred_cls = (pred_mask == cls).astype(int)
         true_cls = (true_mask == cls).astype(int)
-
         intersection = np.sum(pred_cls * true_cls)
         union = np.sum(pred_cls) + np.sum(true_cls) - intersection
-
         if union == 0:
             iou = 1.0  # 如果该类别在预测和真实中都不存在，视为完全匹配
         else:
             iou = intersection / union
-
         iou_list.append(iou)
-
     mIOU = np.mean(iou_list)
     return mIOU
 
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         # 在 SE2020 中的 mask_bin，1 表示未变化，0 表示有变化，但是不包含类别信息，所以需要根据 mask_1 和 mask_2 重新计算地面变化
         pred.mask_bin = pred.mask_1 + pred.mask_2
         pred.mask_bin[pred.mask_bin != 0] = 255
-        print(f"mIOU: {calc_mIOU(pred.mask_bin, sample_enhance.img_ref, [0,255]):.4f}") # mIOU 计算仅支持强迫关注地面变化的情况
+        print(f"mIoU: {calc_mIoU(pred.mask_bin, sample_enhance.img_ref, [0,255]):.4f}") # mIoU 计算仅支持强迫关注地面变化的情况
 
     fig, axes = plt.subplots(2, 3, figsize=(15, 10))
     ## Row 1
@@ -74,3 +74,27 @@ if __name__ == "__main__":
     plt.tight_layout()
     # plt.savefig(f"result_{sample.img_id}.png")
     plt.show()
+
+    # 批量测试
+    RUN_TIME = 100
+    MIOU_LIST = []
+    TIME_LIST = []
+    LAND_TYPE = [x.name for x in dataset.data_root.iterdir() if x.is_dir()]
+    for i in LAND_TYPE:
+        for j in range(RUN_TIME):
+            sample = dataset.sub_gen(i, 1024, j)
+            sample_enhance, enchance_imgB = UAV_enchance(sample, 512)
+            start_time = time.time()
+            pred = model(sample_enhance.img_A, sample_enhance.img_B)
+            if force_grouth:
+                pred.mask_1[pred.mask_1 != 2] = 0 # 强迫仅关注地面变化类别(id 2)
+                pred.mask_2[pred.mask_2 != 2] = 0
+                # 在 SE2020 中的 mask_bin，1 表示未变化，0 表示有变化，但是不包含类别信息，所以需要根据 mask_1 和 mask_2 重新计算地面变化
+                pred.mask_bin = pred.mask_1 + pred.mask_2
+                pred.mask_bin[pred.mask_bin != 0] = 255
+                mIOU = calc_mIoU(pred.mask_bin, sample_enhance.img_ref, [0,255])
+                MIOU_LIST.append(mIOU)
+            end_time = time.time()
+            TIME_LIST.append(end_time - start_time)
+    print(f"Average mIoU: {np.mean(MIOU_LIST):.4f}")
+    print(f"Average processing time: {np.mean(TIME_LIST):.4f} seconds")

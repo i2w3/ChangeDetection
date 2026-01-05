@@ -3,6 +3,8 @@ __pycache__
 *.onnx
 
 res/data/GVLM_CD
+res/data/SE2020_CD
 !res/data/GVLM_CD/README.md
+!res/data/SE2020_CD/README.md
 
 res/trt_cache
