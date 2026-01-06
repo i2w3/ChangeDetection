@@ -1,7 +1,7 @@
 from dataclasses import dataclass
+from typing import List
 
 import numpy as np
-import PIL.Image as Image
 
 from .ort_runner import ORTRunner, softmax
 
@@ -19,7 +19,7 @@ class SE2020(ORTRunner):
     def __init__(self, config:dict):
         super().__init__(config)
 
-    def postProcess(self, outputs_blob:list[np.ndarray]) -> SE2020OUTPUT:
+    def postProcess(self, outputs_blob:List[np.ndarray]) -> SE2020OUTPUT:
         output1, output2, output_bin = outputs_blob
         # 1. 分割分支 Softmax
         output1 = softmax(output1, axis=1)

@@ -1,10 +1,12 @@
+from typing import Tuple, Optional
+
 import cv2
 import numpy as np
 
 
 from .data_gen import GVLM_Sample
 
-def UAV_enchance(gvlm_sample:GVLM_Sample, model_size:int) -> tuple[GVLM_Sample | None, np.ndarray | None]:
+def UAV_enchance(gvlm_sample:GVLM_Sample, model_size:int) -> Tuple[Optional[GVLM_Sample], Optional[np.ndarray]]:
     '''针对 GVLM_CD 数据集进行增强，模拟 UAV 视角下的图像变化，注意仅裁剪 img_A 和 img_ref 图像块，并变化 img_B 的视角，但是 img_B 不进行裁剪，用来做图像匹配算法研究
     '''
     # 1. 找出标签中的主要变化区域，主要针对此区域进行增强

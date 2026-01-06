@@ -56,7 +56,7 @@ class ORTRunner:
         ]
         # load ONNX model, and try to convert to TensorRT engine
         start_time = time.time()
-        self.session = ort.InferenceSession(self.model_path, sess_options=so, providers=providers)
+        self.session = ort.InferenceSession(str(self.model_path), sess_options=so, providers=providers)
         end_time = time.time()
         load_time_ms = (end_time - start_time) * 1000
         print(f"Model loaded in {load_time_ms:.2f} ms.")
