@@ -1,9 +1,11 @@
 import json
 import time
+from typing import List
 
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+from PIL import Image
 
 from src import *
 
@@ -11,7 +13,7 @@ from src import *
 ENABLE_MORE_TEST = False
 
 
-def calc_mIoU(pred_mask:np.ndarray, true_mask:np.ndarray, cls_list:list[int]) -> float:
+def calc_mIoU(pred_mask:np.ndarray, true_mask:np.ndarray, cls_list:List[int]) -> float:
     if pred_mask.shape != true_mask.shape:
         print("Warning: Resizing true_mask to match pred_mask shape for mIoU calculation.")
         true_mask = cv2.resize(true_mask, (pred_mask.shape[1], pred_mask.shape[0]), interpolation=cv2.INTER_NEAREST)
@@ -32,8 +34,8 @@ def calc_mIoU(pred_mask:np.ndarray, true_mask:np.ndarray, cls_list:list[int]) ->
 
 if __name__ == "__main__":
     print("Testing GVLM_CD dataset with SE2020 model, warning: 预训练模型与数据集不匹配，仅作测试使用!")
-    force_grouth = True # SE2020 模型可以关注多种类型变化，通过后处理强迫仅关注地面变化
-    seed = 42  # 随机种子，None 表示不固定
+    force_grouth = False # SE2020 模型可以关注多种类型变化，通过后处理强迫仅关注地面变化
+    seed = None  # 随机种子，None 表示不固定
     config_path = "./config.json"
     with open(config_path, 'r', encoding='utf-8') as f:
         config = json.load(f)
@@ -51,6 +53,12 @@ if __name__ == "__main__":
         pred.mask_bin = pred.mask_1 + pred.mask_2
         pred.mask_bin[pred.mask_bin != 0] = 255
         print(f"mIoU: {calc_mIoU(pred.mask_bin, sample_enhance.img_ref, [0,255]):.4f}") # mIoU 计算仅支持强迫关注地面变化的情况
+    else:
+        pred.mask_1 = Image.fromarray(pred.mask_1).convert("P")
+        pred.mask_1.putpalette(model.color_map)
+
+        pred.mask_2 = Image.fromarray(pred.mask_2).convert("P")
+        pred.mask_2.putpalette(model.color_map)
 
     fig, axes = plt.subplots(2, 3, figsize=(15, 10))
     ## Row 1
@@ -70,9 +78,19 @@ if __name__ == "__main__":
     axes[1,1].imshow(pred.mask_2)
     axes[1,1].set_title("mask_B")
     axes[1,1].axis('off')
-    axes[1,2].imshow(pred.mask_bin, cmap='gray')
-    axes[1,2].set_title("mask_bin")
-    axes[1,2].axis('off')
+    if force_grouth:
+        axes[1,2].imshow(pred.mask_bin, cmap='gray')
+        axes[1,2].set_title("mask_bin")
+        axes[1,2].axis('off')
+    else:
+        # plot lengends for all classes
+        legend_elements = []
+        for i, class_name in enumerate(config["SE2020"]["classes_name"]):
+            color = np.array(config["SE2020"]["classes_cmap"][i]) / 255.0
+            legend_elements.append(plt.Line2D([0], [0], marker='s', color='w', label=class_name,
+                                              markerfacecolor=color, markersize=10))
+        axes[1,2].axis('off')
+        axes[1,2].legend(handles=legend_elements, loc='center', fontsize='large')
 
     plt.tight_layout()
     plt.savefig(f"images/gvlm_result.png")
