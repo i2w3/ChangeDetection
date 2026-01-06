@@ -1,6 +1,7 @@
+import argparse
 import json
 import time
-from typing import List
+from typing import List, Union
 
 import cv2
 import matplotlib.pyplot as plt
@@ -9,11 +10,31 @@ from PIL import Image
 
 from src import *
 
-# 是否使用相同的随机种子在 GVLM_CD 数据集 17 种地形上均裁剪 100 张子图进行预测
-ENABLE_MORE_TEST = False
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="在 GVLM_CD 数据集上进行测试")
+    parser.add_argument("--dataset_path", "-dp", type=str, default="./res/data/GVLM_CD",
+                        help="GVLM_CD 数据集路径")
+    parser.add_argument("--sample_name", "-sn", type=str, default="A Luoi_Vietnam",
+                        help="数据集路径下子样本名称")
+    parser.add_argument("--cut_size", "-cs", type=int, default=None,
+                        help="裁剪子图的大小，默认不裁剪使用全图")
+    parser.add_argument("--enable_force_grouth", "-efg", action="store_true",
+                        help="是否通过后处理强迫模型仅关注地面变化")
+    parser.add_argument("--enable_more_test", "-emt", action="store_true",
+                        help="是否使用相同的随机种子在 GVLM_CD 数据集 17 种地形上均裁剪子图进行预测")
+    parser.add_argument("--run_time", type=int, default=100,
+                        help="每种地形裁剪子图的次数")
+    parser.add_argument("--seed", type=int, default=None,
+                        help="随机种子，None 表示不固定，仅供单次测试使用")
+    parser.add_argument("--config_path", type=str, default="./config.json",
+                        help="配置文件路径")
+    return parser.parse_args()
 
 
 def calc_mIoU(pred_mask:np.ndarray, true_mask:np.ndarray, cls_list:List[int]) -> float:
+    '''计算 mIoU
+    '''
     if pred_mask.shape != true_mask.shape:
         print("Warning: Resizing true_mask to match pred_mask shape for mIoU calculation.")
         true_mask = cv2.resize(true_mask, (pred_mask.shape[1], pred_mask.shape[0]), interpolation=cv2.INTER_NEAREST)
@@ -32,21 +53,39 @@ def calc_mIoU(pred_mask:np.ndarray, true_mask:np.ndarray, cls_list:List[int]) ->
     return mIOU
 
 
+def over_leap(img:np.ndarray, img_mask:Union[Image.Image, np.ndarray], alpha:float=0.5) -> np.ndarray:
+    '''图像叠加
+    '''
+    if isinstance(img_mask, Image.Image):
+        img_mask = np.array(img_mask.convert("RGB"))
+        img_mask = cv2.cvtColor(img_mask, cv2.COLOR_RGB2BGR)
+    elif isinstance(img_mask, np.ndarray):
+        img_mask = Image.fromarray(img_mask).convert("P")
+        img_mask.putpalette(model.color_map)
+        img_mask = np.array(img_mask.convert("RGB"))
+        img_mask = cv2.cvtColor(img_mask, cv2.COLOR_RGB2BGR)
+    else:
+        raise TypeError("img_mask must be PIL.Image or np.ndarray")
+    if img.shape[:2] != img_mask.shape[:2]:
+        img_mask = cv2.resize(img_mask, (img.shape[1], img.shape[0]), interpolation=cv2.INTER_NEAREST)
+
+
+    return cv2.addWeighted(img, alpha, img_mask, 1 - alpha, 0)
+
+
 if __name__ == "__main__":
+    args = parse_args()
     print("Testing GVLM_CD dataset with SE2020 model, warning: 预训练模型与数据集不匹配，仅作测试使用!")
-    force_grouth = False # SE2020 模型可以关注多种类型变化，通过后处理强迫仅关注地面变化
-    seed = None  # 随机种子，None 表示不固定
-    config_path = "./config.json"
-    with open(config_path, 'r', encoding='utf-8') as f:
+    with open(args.config_path, 'r', encoding='utf-8') as f:
         config = json.load(f)
 
     model = SE2020(config["SE2020"])
-    dataset = GVLM_CDataset("./res/data/GVLM_CD")
-    sample = dataset.sub_gen("A Luoi_Vietnam", 1024, seed) # 随机裁剪1024x1024大小的图像块
+    dataset = GVLM_CDataset(args.dataset_path)
+    sample = dataset.sub_gen(args.sample_name, args.cut_size, args.seed) # 随机裁剪1024x1024大小的图像块
     sample_enhance, enchance_imgB = UAV_enchance(sample, 512)
 
     pred = model(sample_enhance.img_A, sample_enhance.img_B)
-    if force_grouth:
+    if args.enable_force_grouth:
         pred.mask_1[pred.mask_1 != 2] = 0 # 强迫仅关注地面变化类别(id 2)
         pred.mask_2[pred.mask_2 != 2] = 0
         # 在 SE2020 中的 mask_bin，1 表示未变化，0 表示有变化，但是不包含类别信息，所以需要根据 mask_1 和 mask_2 重新计算地面变化
@@ -72,13 +111,13 @@ if __name__ == "__main__":
     axes[0,2].set_title("ref")
     axes[0,2].axis('off')
     ## Row 2
-    axes[1,0].imshow(pred.mask_1)
+    axes[1,0].imshow(over_leap(sample_enhance.img_A, pred.mask_1))
     axes[1,0].set_title("mask_A")
     axes[1,0].axis('off')
-    axes[1,1].imshow(pred.mask_2)
+    axes[1,1].imshow(over_leap(sample_enhance.img_B, pred.mask_2))
     axes[1,1].set_title("mask_B")
     axes[1,1].axis('off')
-    if force_grouth:
+    if args.enable_force_grouth:
         axes[1,2].imshow(pred.mask_bin, cmap='gray')
         axes[1,2].set_title("mask_bin")
         axes[1,2].axis('off')
@@ -96,21 +135,20 @@ if __name__ == "__main__":
     plt.savefig(f"images/gvlm_result.png")
     plt.show()
     
-    if not ENABLE_MORE_TEST:
+    if not args.enable_more_test:
         raise SystemExit("Only run single test!")
     
     # 批量测试
-    RUN_TIME = 100
     MIOU_LIST = []
     TIME_LIST = []
     LAND_TYPE = [x.name for x in dataset.data_root.iterdir() if x.is_dir()]
     for i in LAND_TYPE:
-        for j in range(RUN_TIME):
+        for j in range(args.run_time):
             sample = dataset.sub_gen(i, 1024, j)
             sample_enhance, enchance_imgB = UAV_enchance(sample, 512)
             start_time = time.time()
             pred = model(sample_enhance.img_A, sample_enhance.img_B)
-            if force_grouth:
+            if args.enable_force_grouth:
                 pred.mask_1[pred.mask_1 != 2] = 0 # 强迫仅关注地面变化类别(id 2)
                 pred.mask_2[pred.mask_2 != 2] = 0
                 # 在 SE2020 中的 mask_bin，1 表示未变化，0 表示有变化，但是不包含类别信息，所以需要根据 mask_1 和 mask_2 重新计算地面变化

@@ -36,6 +36,9 @@ class SE2020DataReader(CalibrationDataReader):
             data_dir = Path(data_dir)
         self.data_dir = data_dir
         self.image_lists = list((self.data_dir / "val" / "im1").glob("*.png"))[:limit]
+        if len(self.image_lists) == 0:
+            raise ValueError(f"check data_dir: {data_dir}, no images found.")
+        
         self._i = 0 # 计数器
         self._init_pbar()
 

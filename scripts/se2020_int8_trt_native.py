@@ -3,6 +3,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 import tensorrt as trt
+import pycuda.autoinit  # 这行代码会自动管理 CUDA 上下文
 import pycuda.driver as cuda
 
 
@@ -32,6 +33,8 @@ class SE2020EntropyCalibrator(trt.IInt8EntropyCalibrator2):
         self.cache_file = ecache_path / f"{onnx_model_path.stem}.cache"
         self.batch_size = batch_size
         self.image_lists = list((self.data_dir / "val" / "im1").glob("*.png"))[:limit]
+        if len(self.image_lists) == 0:
+            raise ValueError(f"check data_dir: {data_dir}, no images found.")
 
         self.count = 0
         self.current_index = 0
@@ -44,7 +47,7 @@ class SE2020EntropyCalibrator(trt.IInt8EntropyCalibrator2):
                                             self.model_mean[0]*255)
         self.model_std_array:np.ndarray = np.array(self.model_std).reshape(1, 3, 1, 1).astype(np.float32)
 
-        # 分配单个 batch 需要的 GPU 显存：(B,3,H,W)*4Bytes (float32)
+        # 分配单个 batch 需要的 GPU 显存：(B,3,H,W) * 4Bytes (float32)
         self.one_batch_size = trt.volume(self.input_shape) * 4
         # 申请两个输入的显存 (Input1 和 Input2)
         self.d_input1 = cuda.mem_alloc(self.one_batch_size)
@@ -113,7 +116,7 @@ def build_calib_cache():
     # 1. 准备路径
     onnx_model_path = "./res/pspnet_hrnet_w18.onnx"
     onnx_trt_engine_cache_path = "./res/trt_cache"
-    data_dir = "./res/data/SE2020_CD/val"
+    data_dir = "./res/data/SE2020_CD"
 
     # 2. 初始化 TensorRT Builder
     logger = trt.Logger(trt.Logger.VERBOSE)
@@ -134,7 +137,14 @@ def build_calib_cache():
 
     # 5. 构建 Engine (触发 get_batch 并生成 cache 文件，但是生成的 engine 不保存，使用 ort 来再生成一次)
     # TODO: 实现 trt_runner.py 来直接加载 TensorRT engine 进行推理
-    builder.build_serialized_network(network, config)
+    plan = builder.build_serialized_network(network, config)
+    
+    if plan:
+        with open("./demo.engine", "wb") as f:
+            f.write(plan)
+        print("Build success!")
+    else:
+        print("Build failed!")
     '''
     TensorrtExecutionProvider::trt_int8_enable = True
                              ::trt_fp16_enable = False
