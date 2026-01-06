@@ -52,7 +52,8 @@ class ORTRunner:
                 'gpu_mem_limit': 4 * 1024 * 1024 * 1024,
                 'cudnn_conv_algo_search': 'EXHAUSTIVE',
                 'do_copy_in_default_stream': True,
-            })
+            }),
+            ('CPUExecutionProvider', {})
         ]
         # load ONNX model, and try to convert to TensorRT engine
         start_time = time.time()

@@ -132,8 +132,8 @@ if __name__ == "__main__":
         axes[1,2].legend(handles=legend_elements, loc='center', fontsize='large')
 
     plt.tight_layout()
-    plt.savefig(f"images/gvlm_result.png")
-    plt.show()
+    # plt.savefig(f"images/gvlm_result.png")
+    # plt.show()
     
     if not args.enable_more_test:
         raise SystemExit("Only run single test!")
@@ -144,7 +144,7 @@ if __name__ == "__main__":
     LAND_TYPE = [x.name for x in dataset.data_root.iterdir() if x.is_dir()]
     for i in LAND_TYPE:
         for j in range(args.run_time):
-            sample = dataset.sub_gen(i, 1024, j)
+            sample = dataset.sub_gen(i, args.cut_size, j)
             sample_enhance, enchance_imgB = UAV_enchance(sample, 512)
             start_time = time.time()
             pred = model(sample_enhance.img_A, sample_enhance.img_B)
@@ -156,7 +156,46 @@ if __name__ == "__main__":
                 pred.mask_bin[pred.mask_bin != 0] = 255
                 mIOU = calc_mIoU(pred.mask_bin, sample_enhance.img_ref, [0,255])
                 MIOU_LIST.append(mIOU)
+            else:
+                pred.mask_1 = Image.fromarray(pred.mask_1).convert("P")
+                pred.mask_1.putpalette(model.color_map)
+
+                pred.mask_2 = Image.fromarray(pred.mask_2).convert("P")
+                pred.mask_2.putpalette(model.color_map)
             end_time = time.time()
             TIME_LIST.append(end_time - start_time)
+            fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+            ## Row 1
+            axes[0,0].imshow(cv2.cvtColor(sample_enhance.img_A, cv2.COLOR_BGR2RGB))
+            axes[0,0].set_title("img_A")
+            axes[0,0].axis('off')
+            axes[0,1].imshow(cv2.cvtColor(sample_enhance.img_B, cv2.COLOR_BGR2RGB))
+            axes[0,1].set_title("img_B")
+            axes[0,1].axis('off')
+            axes[0,2].imshow(sample_enhance.img_ref, cmap='gray')
+            axes[0,2].set_title("ref")
+            axes[0,2].axis('off')
+            ## Row 2
+            axes[1,0].imshow(over_leap(sample_enhance.img_A, pred.mask_1))
+            axes[1,0].set_title("mask_A")
+            axes[1,0].axis('off')
+            axes[1,1].imshow(over_leap(sample_enhance.img_B, pred.mask_2))
+            axes[1,1].set_title("mask_B")
+            axes[1,1].axis('off')
+            if args.enable_force_grouth:
+                axes[1,2].imshow(pred.mask_bin, cmap='gray')
+                axes[1,2].set_title("mask_bin")
+                axes[1,2].axis('off')
+            else:
+                # plot lengends for all classes
+                legend_elements = []
+                for k, class_name in enumerate(config["SE2020"]["classes_name"]):
+                    color = np.array(config["SE2020"]["classes_cmap"][k]) / 255.0
+                    legend_elements.append(plt.Line2D([0], [0], marker='s', color='w', label=class_name, markerfacecolor=color, markersize=10))
+                axes[1,2].axis('off')
+                axes[1,2].legend(handles=legend_elements, loc='center', fontsize='large')
+
+            plt.tight_layout()
+            plt.savefig(f"images/{i}-{j}.png")
     print(f"Average mIoU: {np.mean(MIOU_LIST):.4f}")
     print(f"Average processing time: {np.mean(TIME_LIST):.4f} seconds")
