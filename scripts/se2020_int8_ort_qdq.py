@@ -117,3 +117,9 @@ if __name__ == "__main__":
         extra_options=trt_extra_options,
         calibration_providers=['CUDAExecutionProvider', 'CPUExecutionProvider'],
     )
+
+    # 4. 直接使用 ort 运行导出的量化模型，会自动转换为 TensorRT 引擎运行
+    '''
+    TensorrtExecutionProvider::trt_int8_enable = True
+                             ::trt_fp16_enable = False
+    '''

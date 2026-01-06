@@ -7,6 +7,9 @@ import numpy as np
 
 from src import *
 
+# 是否使用相同的随机种子在 GVLM_CD 数据集 17 种地形上均裁剪 100 张子图进行预测
+ENABLE_MORE_TEST = False
+
 
 def calc_mIoU(pred_mask:np.ndarray, true_mask:np.ndarray, cls_list:list[int]) -> float:
     if pred_mask.shape != true_mask.shape:
@@ -30,7 +33,7 @@ def calc_mIoU(pred_mask:np.ndarray, true_mask:np.ndarray, cls_list:list[int]) ->
 if __name__ == "__main__":
     print("Testing GVLM_CD dataset with SE2020 model, warning: 预训练模型与数据集不匹配，仅作测试使用!")
     force_grouth = True # SE2020 模型可以关注多种类型变化，通过后处理强迫仅关注地面变化
-    seed = None  # 随机种子，None 表示不固定
+    seed = 42  # 随机种子，None 表示不固定
     config_path = "./config.json"
     with open(config_path, 'r', encoding='utf-8') as f:
         config = json.load(f)
@@ -72,9 +75,12 @@ if __name__ == "__main__":
     axes[1,2].axis('off')
 
     plt.tight_layout()
-    # plt.savefig(f"result_{sample.img_id}.png")
+    plt.savefig(f"images/gvlm_result.png")
     plt.show()
-
+    
+    if not ENABLE_MORE_TEST:
+        raise SystemExit("Only run single test!")
+    
     # 批量测试
     RUN_TIME = 100
     MIOU_LIST = []
