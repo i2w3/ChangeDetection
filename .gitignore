@@ -2,6 +2,7 @@ __pycache__
 
 *.onnx
 
+logs/
 res/data/GVLM_CD
 res/data/SE2020_CD
 !res/data/GVLM_CD/README.md

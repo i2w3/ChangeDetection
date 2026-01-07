@@ -1,4 +1,5 @@
 import argparse
+import gc
 import json
 import time
 from typing import List, Union, Optional
@@ -112,16 +113,16 @@ def over_leap(img:np.ndarray, img_mask:Union[Image.Image, np.ndarray], alpha:flo
         raise TypeError("img_mask must be PIL.Image or np.ndarray")
     if img.shape[:2] != img_mask.shape[:2]:
         img_mask = cv2.resize(img_mask, (img.shape[1], img.shape[0]), interpolation=cv2.INTER_NEAREST)
-
-
     return cv2.addWeighted(img, alpha, img_mask, 1 - alpha, 0)
 
 
 if __name__ == "__main__":
     args = parse_args()
-    print("Testing GVLM_CD dataset with SE2020 model, warning: 预训练模型与数据集不匹配，仅作测试使用!")
+    logger('info', "Testing GVLM_CD dataset with SE2020 model, warning: 预训练模型与数据集不匹配，仅作测试使用!")
+    logger('info', f"Arguments: {args}")
     with open(args.config_path, 'r', encoding='utf-8') as f:
         config = json.load(f)
+        logger('info', f"Loaded config from {args.config_path}: {config}")
 
     model = SE2020(config["SE2020"])
     dataset = GVLM_CDataset(args.dataset_path)
@@ -135,7 +136,7 @@ if __name__ == "__main__":
         # 在 SE2020 中的 mask_bin，1 表示未变化，0 表示有变化，但是不包含类别信息，所以需要根据 mask_1 和 mask_2 重新计算地面变化
         pred.mask_bin = pred.mask_1 + pred.mask_2
         pred.mask_bin[pred.mask_bin != 0] = 255
-        print(f"mIoU: {calc_mIoU(pred.mask_bin, sample.img_ref, [0,255]):.4f}") # mIoU 计算仅支持强迫关注地面变化的情况
+        logger('info', f"mIoU: {calc_mIoU(pred.mask_bin, sample.img_ref, [0,255]):.4f}") # mIoU 计算仅支持强迫关注地面变化的情况
     else:
         pred.mask_1 = Image.fromarray(pred.mask_1).convert("P")
         pred.mask_1.putpalette(model.color_map)
@@ -180,7 +181,9 @@ if __name__ == "__main__":
             
             plot_data(args, config, sample, pred, fig=fig, save_str=f"images/{i}-{j}.png")
             del sample, pred
+            if j % 10 == 0:
+                gc.collect()
     plt.close('all')
     if np.sum(MIOU_LIST) > 0:
-        print(f"Average mIoU: {np.mean(MIOU_LIST):.4f}")
-    print(f"Average processing time: {np.mean(TIME_LIST):.4f} seconds")
+        logger('info', f"Average mIoU: {np.mean(MIOU_LIST):.4f}")
+    logger('info', f"Average processing time: {np.mean(TIME_LIST):.4f} seconds")
