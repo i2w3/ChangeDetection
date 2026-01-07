@@ -82,9 +82,9 @@ class GVLM_CDataset:
         else:
             xc, yc = random_center(*img_A.shape[:2], half_size)
             return GVLM_Sample(
-                img_A   = img_A[yc - half_size: yc + half_size, xc - half_size: xc + half_size],
-                img_B   = img_B[yc - half_size: yc + half_size, xc - half_size: xc + half_size],
-                img_ref = img_ref[yc - half_size: yc + half_size, xc - half_size: xc + half_size],
+                img_A   = img_A[yc - half_size: yc + half_size, xc - half_size: xc + half_size].copy(),
+                img_B   = img_B[yc - half_size: yc + half_size, xc - half_size: xc + half_size].copy(),
+                img_ref = img_ref[yc - half_size: yc + half_size, xc - half_size: xc + half_size].copy(),
                 img_id  = sub_folder.name + "_{0}_{1}".format(xc, yc)
             )
     

@@ -32,10 +32,13 @@ def parse_args():
     return parser.parse_args()
 
 
-def plot_data(args:argparse.Namespace, config:dict, img_data:GVLM_Sample, mask_data:SE2020OUTPUT, save_str:Optional[str] = None):
+def plot_data(args:argparse.Namespace, config:dict, img_data:GVLM_Sample, mask_data:SE2020OUTPUT, fig:Optional[plt.Figure] = None, save_str:Optional[str] = None) -> plt.Figure:
     '''绘制图像数据和预测结果
     '''
-    fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+    if fig is None:
+        fig = plt.figure(figsize=(15, 10))
+    fig.clf()
+    axes = fig.subplots(2, 3)
     ## Row 1
     axes[0,0].imshow(cv2.cvtColor(img_data.img_A, cv2.COLOR_BGR2RGB))
     axes[0,0].set_title("img_A")
@@ -141,7 +144,8 @@ if __name__ == "__main__":
         pred.mask_2.putpalette(model.color_map)
 
     fig = plot_data(args, config, sample, pred, save_str="images/gvlm_result.png")
-    plt.show()
+    # plt.show()
+    plt.close('all')
     
     if not args.enable_more_test:
         raise SystemExit("Only run single test!")
@@ -150,6 +154,7 @@ if __name__ == "__main__":
     MIOU_LIST = []
     TIME_LIST = []
     LAND_TYPE = [x.name for x in dataset.data_root.iterdir() if x.is_dir()]
+    fig = plt.figure(figsize=(15, 10))
     for i in LAND_TYPE:
         for j in range(args.run_time):
             sample = dataset.sub_gen(i, args.cut_size, j)
@@ -173,8 +178,9 @@ if __name__ == "__main__":
             end_time = time.time()
             TIME_LIST.append(end_time - start_time)
             
-            plot_data(args, config, sample, pred, save_str=f"images/{i}-{j}.png")
-            plt.close('all')
+            plot_data(args, config, sample, pred, fig=fig, save_str=f"images/{i}-{j}.png")
+            del sample, pred
+    plt.close('all')
     if np.sum(MIOU_LIST) > 0:
         print(f"Average mIoU: {np.mean(MIOU_LIST):.4f}")
     print(f"Average processing time: {np.mean(TIME_LIST):.4f} seconds")
