@@ -174,5 +174,7 @@ if __name__ == "__main__":
             TIME_LIST.append(end_time - start_time)
             
             plot_data(args, config, sample, pred, save_str=f"images/{i}-{j}.png")
-    print(f"Average mIoU: {np.mean(MIOU_LIST):.4f}")
+            plt.close('all')
+    if np.sum(MIOU_LIST) > 0:
+        print(f"Average mIoU: {np.mean(MIOU_LIST):.4f}")
     print(f"Average processing time: {np.mean(TIME_LIST):.4f} seconds")
