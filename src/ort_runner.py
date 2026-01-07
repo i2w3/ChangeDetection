@@ -5,6 +5,8 @@ import cv2
 import numpy as np
 import onnxruntime as ort
 
+from .logger import logger
+
 
 def softmax(x, axis=1):
     '''Softmax
@@ -60,33 +62,32 @@ class ORTRunner:
         self.session = ort.InferenceSession(str(self.model_path), sess_options=so, providers=providers)
         end_time = time.time()
         load_time_ms = (end_time - start_time) * 1000
-        print(f"Model loaded in {load_time_ms:.2f} ms.")
+        logger("info", f"Model loaded in {load_time_ms:.2f} ms.")
         # print name
         self.inputs_with_dummy = {}
         self.outputs = []
-        print("model input name:")
+        logger("info", "model input name:")
         for input_name in self.session.get_inputs():
-            print(f"\t{input_name.name} - {input_name.shape}")
+            logger("info", f"\t{input_name.name} - {input_name.shape}")
             self.inputs_with_dummy[input_name.name] = np.zeros(input_name.shape, dtype=np.float32)
-        print("model outputs name:")
+        logger("info", "model outputs name:")
         for output_name in self.session.get_outputs():
-            print(f"\t{output_name.name} - {output_name.shape}")
+            logger("info", f"\t{output_name.name} - {output_name.shape}")
             self.outputs.append(output_name.name)
         # warm up
         start_time = time.time()
         self.session.run(None, self.inputs_with_dummy)
         end_time = time.time()
         load_time_ms = (end_time - start_time) * 1000
-        print(f"Model warm up in {load_time_ms:.2f} ms.")
+        logger("info", f"Model warm up in {load_time_ms:.2f} ms.")
 
     def __call__(self, *args, **kwargs):
         return self.infer(*args, **kwargs)
     
-    def preProcess(self, src:np.ndarray) -> np.ndarray:
+    def preProcess(self, img:np.ndarray) -> np.ndarray:
         '''预处理
         '''
-        img = src.copy()
-        shape = src.shape[:2]  # [height, width, channel] -> [height, width]
+        shape = img.shape[:2]  # [height, width, channel] -> [height, width]
         if (shape[0] != self.model_size or shape[1] != self.model_size):
             img = cv2.resize(img, (self.model_size, self.model_size))
         blob = cv2.dnn.blobFromImage(img, 1.0 / 255.0, (self.model_size, self.model_size), self.model_mean_bgr255, swapRB=True, crop=False, ddepth=cv2.CV_32F)
@@ -113,7 +114,7 @@ class ORTRunner:
             start_time = time.time()
             result = self.postProcess(outputs_blob)
             postProcess_time.append(time.time() - start_time)
-        print(f"Average Pre-Process Time:  {np.mean(preProcess_time)*1000:.2f} ms")
-        print(f"Average Inference Time:   {np.mean(inference_time)*1000:.2f} ms")
-        print(f"Average Post-Process Time: {np.mean(postProcess_time)*1000:.2f} ms")
+        logger("info", f"Average Pre-Process Time:  {np.mean(preProcess_time)*1000:.2f} ms")
+        logger("info", f"Average Inference Time:   {np.mean(inference_time)*1000:.2f} ms")
+        logger("info", f"Average Post-Process Time: {np.mean(postProcess_time)*1000:.2f} ms")
         return result
