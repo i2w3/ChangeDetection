@@ -1,3 +1,4 @@
+import sys
 import time
 import logging
 from pathlib import Path
@@ -56,7 +57,7 @@ class Logger:
             self.logger.error("didn't use the true level, but log: " + note)
 
     
-logger = Logger("main")
+logger = Logger(Path(sys.argv[0]).stem)
 
 if __name__ == "__main__":
     logger = Logger("test_logger")
