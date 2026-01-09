@@ -22,8 +22,10 @@
     "SCanNet": {
         "model_path": "./res/SCanNet_SECOND.onnx",
         "model_size": 512,
-        "model_mean": [0.485, 0.456, 0.406],
-        "model_std": [0.229, 0.224, 0.225],
+        "model_mean": [113.40, 114.08, 116.45],
+        "model_std": [48.30,  46.27,  48.14],
+        "model_mean2": [111.07, 114.04, 118.18],
+        "model_std2": [49.41,  47.01,  47.94],
         "classes_name": ["NO CHANGE", "low_vegetation", "nvg_surface", "tree", "water", "Building", "Playground"],
         "classes_name_zh": ["未变化区域", "低植被", "无植被表面", "树木", "水", "建筑", "操场"],
         "classes_cmap": [[0, 0, 0], [0, 128, 0], [128, 128, 128], [0, 255, 0], [0, 0, 255], [128, 0, 0], [255, 0, 0]],
