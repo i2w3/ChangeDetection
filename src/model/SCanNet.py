@@ -20,9 +20,5 @@ class SCanNet(ORTRunner):
 
         np_pa = np.argmax(output1, axis=1).astype(np.uint8) * mask_bin
         np_pb = np.argmax(output2, axis=1).astype(np.uint8) * mask_bin
-
-        # 反转 np_cm, 对齐可视化效果
-        mask_bin[mask_bin==0] = 255
-        mask_bin[mask_bin==1] = 0
         
         return FinalResult(mask_bin=mask_bin[0], mask_1=np_pa[0], mask_2=np_pb[0])

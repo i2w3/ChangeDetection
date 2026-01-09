@@ -10,7 +10,7 @@
         "git_url": "https://github.com/LiheYoung/SenseEarth2020-ChangeDetection"
     },
     "MambaCD": {
-        "model_path": "./res/MambaSCD_Tiny_17_SECOND_embedded.onnx",
+        "model_path": "./res/MambaSCD_Tiny_SECOND_embedded.onnx",
         "model_size": 512,
         "model_mean": [0.485, 0.456, 0.406],
         "model_std": [0.229, 0.224, 0.225],

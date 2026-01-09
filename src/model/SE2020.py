@@ -37,7 +37,9 @@ class SE2020(ORTRunner):
         print()
 
         # 6. 格式转化
-        mask_bin = mask_bin[0].astype(np.uint8) * 255 # (1, 512, 512) -> (512, 512)
+        ## 注意 SE2020 默认是 0 表示“变化”，1 表示“未变化”，这里需要转换为 0 表示“未变化”，255 表示“变化”
+        mask_bin = (~mask_bin[0]).astype(np.uint8)*255 # (1, 512, 512) -> (512, 512)
+        
         output1 = output1[0].astype(np.uint8) # (1, 512, 512) -> (512, 512)
         output2 = output2[0].astype(np.uint8) # (1, 512, 512) -> (512, 512)
         

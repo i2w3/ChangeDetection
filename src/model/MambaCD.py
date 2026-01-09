@@ -18,9 +18,5 @@ class MambaCD(ORTRunner):
 
         print(np.unique(np_cm), np.unique(np_pa), np.unique(np_pb))
         print(np_cm.shape, np_pa.shape, np_pb.shape)
-
-        # 反转 np_cm, 对齐可视化效果
-        np_cm[np_cm==0] = 255
-        np_cm[np_cm==1] = 0
         
         return FinalResult(mask_bin=np_cm, mask_1=np_pa[0], mask_2=np_pb[0])
