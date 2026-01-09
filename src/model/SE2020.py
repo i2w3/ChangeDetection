@@ -1,25 +1,16 @@
-from dataclasses import dataclass
 from typing import List
 
 import numpy as np
 
-from .ort_runner import ORTRunner, softmax
-
-
-@dataclass
-class SE2020OUTPUT:
-    '''SE2020 的训练数据集为前后时相的两张图片各自对应一张标注图，表示发生变化的区域以及该图片变化区域内各时期的土地性质，所以有两个 mask 图输出
-    '''
-    mask_bin: np.ndarray
-    mask_1: np.ndarray
-    mask_2: np.ndarray
+from ..ort_runner import ORTRunner, FinalResult
+from ..ort_runner import softmax
 
 
 class SE2020(ORTRunner):
     def __init__(self, config:dict):
         super().__init__(config)
 
-    def postProcess(self, outputs_blob:List[np.ndarray]) -> SE2020OUTPUT:
+    def postProcess(self, outputs_blob:List[np.ndarray]) -> FinalResult:
         output1, output2, output_bin = outputs_blob
         # 1. 分割分支 Softmax
         output1 = softmax(output1, axis=1)
@@ -42,7 +33,7 @@ class SE2020(ORTRunner):
         print("Changed classes in image2:",end=' ')
         for i in np.unique(output2).tolist():
             if i != 0:
-                print(f" - {self.classes_name[i]}", end=' ')
+                print(f" - {self.config['classes_name'][i]}", end=' ')
         print()
 
         # 6. 格式转化
@@ -50,4 +41,4 @@ class SE2020(ORTRunner):
         output1 = output1[0].astype(np.uint8) # (1, 512, 512) -> (512, 512)
         output2 = output2[0].astype(np.uint8) # (1, 512, 512) -> (512, 512)
         
-        return SE2020OUTPUT(mask_bin=mask_bin, mask_1=output1, mask_2=output2)
+        return FinalResult(mask_bin=mask_bin, mask_1=output1, mask_2=output2)

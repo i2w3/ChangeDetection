@@ -72,8 +72,14 @@ class SE2020EntropyCalibrator(trt.IInt8EntropyCalibrator2):
             idx = self.current_index + i
             img_path = self.image_lists[idx]
             
+            if not img_path.exists():
+                raise FileNotFoundError(f"Image file not found: {img_path}")
+            img2_path = change_parent_dir(img_path, "im1", "im2")
+            if not img2_path.exists():
+                raise FileNotFoundError(f"Paired image file not found: {img2_path}")
+
             img_1_src = cv2.imread(str(img_path))
-            img_2_src = cv2.imread(str(change_parent_dir(img_path, "im1", "im2")))
+            img_2_src = cv2.imread(str(img2_path))
             
             batch_input1[i] = self.preProcess(img_1_src)
             batch_input2[i] = self.preProcess(img_2_src)

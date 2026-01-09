@@ -8,4 +8,6 @@ res/data/SE2020_CD
 !res/data/GVLM_CD/README.md
 !res/data/SE2020_CD/README.md
 
+res/MambaSCD_Base
+res/MambaSCD_Tiny
 res/trt_cache

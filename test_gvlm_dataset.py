@@ -9,11 +9,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
-from src import *
+import src
+from src import GVLM_CDataset, GVLM_Sample, FinalResult, logger
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="在 GVLM_CD 数据集上进行测试")
+    parser.add_argument("--model", "-m", type=str, help="使用的模型")
     parser.add_argument("--dataset_path", "-dp", type=str, default="./res/data/GVLM_CD",
                         help="GVLM_CD 数据集路径")
     parser.add_argument("--sample_name", "-sn", type=str, default="A Luoi_Vietnam",
@@ -33,7 +35,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def plot_data(args:argparse.Namespace, config:dict, img_data:GVLM_Sample, mask_data:SE2020OUTPUT, fig:Optional[plt.Figure] = None, save_str:Optional[str] = None) -> plt.Figure:
+def plot_data(args:argparse.Namespace, config:dict, img_data:GVLM_Sample, mask_data:FinalResult, fig:Optional[plt.Figure] = None, save_str:Optional[str] = None) -> plt.Figure:
     '''绘制图像数据和预测结果
     '''
     if fig is None:
@@ -47,8 +49,8 @@ def plot_data(args:argparse.Namespace, config:dict, img_data:GVLM_Sample, mask_d
     axes[0,1].imshow(cv2.cvtColor(img_data.img_B, cv2.COLOR_BGR2RGB))
     axes[0,1].set_title("img_B")
     axes[0,1].axis('off')
-    axes[0,2].imshow(img_data.img_ref, cmap='gray')
-    axes[0,2].set_title("ref")
+    axes[0,2].imshow(mask_data.mask_bin, cmap='gray')
+    axes[0,2].set_title("mask_bin, (black: change, white: no change)")
     axes[0,2].axis('off')
     ## Row 2
     axes[1,0].imshow(over_leap(img_data.img_A, mask_data.mask_1))
@@ -58,8 +60,8 @@ def plot_data(args:argparse.Namespace, config:dict, img_data:GVLM_Sample, mask_d
     axes[1,1].set_title("mask_B")
     axes[1,1].axis('off')
     if args.enable_force_grouth:
-        axes[1,2].imshow(mask_data.mask_bin, cmap='gray')
-        axes[1,2].set_title("mask_bin")
+        axes[1,2].imshow(img_data.img_ref, cmap='gray')
+        axes[1,2].set_title("ref")
         axes[1,2].axis('off')
     else:
         # plot lengends for all classes
@@ -122,13 +124,14 @@ if __name__ == "__main__":
     logger('info', f"Arguments: {args}")
     with open(args.config_path, 'r', encoding='utf-8') as f:
         config = json.load(f)
-        logger('info', f"Loaded config from {args.config_path}: {config}")
+        logger('info', f"Loaded config from {args.config_path}: {config[args.model]}")
 
-    model = SE2020(config["SE2020"])
+    model = getattr(src, args.model)(config[args.model])
     dataset = GVLM_CDataset(args.dataset_path)
     sample = dataset.sub_gen(args.sample_name, args.cut_size, args.seed) # 随机裁剪1024x1024大小的图像块
     # sample_enhance, enchance_imgB = UAV_enchance(sample, 512)
 
+    print(sample.img_A.shape, sample.img_B.shape, sample.img_ref.shape)
     pred = model(sample.img_A, sample.img_B)
     if args.enable_force_grouth:
         pred.mask_1[pred.mask_1 != 2] = 0 # 强迫仅关注地面变化类别(id 2)
@@ -145,7 +148,7 @@ if __name__ == "__main__":
         pred.mask_2.putpalette(model.color_map)
 
     fig = plot_data(args, config, sample, pred, save_str="images/gvlm_result.png")
-    # plt.show()
+    plt.show()
     plt.close('all')
     
     if not args.enable_more_test:
