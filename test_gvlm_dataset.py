@@ -2,6 +2,7 @@ import argparse
 import gc
 import json
 import time
+from pathlib import Path
 from typing import List, Union, Optional
 
 import cv2
@@ -24,7 +25,7 @@ def parse_args():
                         help="裁剪子图的大小，默认不裁剪使用全图")
     parser.add_argument("--enable_more_test", "-emt", action="store_true",
                         help="是否使用相同的随机种子在 GVLM_CD 数据集 17 种地形上均裁剪子图进行预测")
-    parser.add_argument("--run_time", type=int, default=100,
+    parser.add_argument("--run_time", "-rt", type=int, default=100,
                         help="每种地形裁剪子图的次数")
     parser.add_argument("--seed", type=int, default=None,
                         help="随机种子，None 表示不固定，仅供单次测试使用")
@@ -131,8 +132,6 @@ if __name__ == "__main__":
     model = getattr(src, args.model)(config[args.model])
     dataset = GVLM_CDataset(args.dataset_path)
     sample = dataset.sub_gen(args.sample_name, args.cut_size, args.seed)
-
-    print(sample.img_A.shape, sample.img_B.shape, sample.img_ref.shape)
     pred = model(sample.img_A, sample.img_B)
 
     fig = plot_data(config[args.model], sample, pred, save_str="images/gvlm_result.png")
@@ -140,3 +139,25 @@ if __name__ == "__main__":
 
     if not args.enable_more_test:
         raise SystemExit("Only run single test!")
+    
+    # 进行更多测试
+    TIME_LIST = []
+    LAND_TYPE = [x.name for x in dataset.data_root.iterdir() if x.is_dir()]
+    fig = plt.figure(figsize=(15, 10))
+    for i in LAND_TYPE:
+        SAVE_PATH = Path("images") / Path(i)
+        SAVE_PATH.mkdir(parents=True, exist_ok=True)
+        for j in range(args.run_time):
+            sample = dataset.sub_gen(i, args.cut_size, j)
+            start_time = time.time()
+            pred = model(sample.img_A, sample.img_B)
+            
+            end_time = time.time()
+            TIME_LIST.append(end_time - start_time)
+            
+            plot_data(config[args.model], sample, pred, fig=fig, save_str=str(SAVE_PATH / f"{i}-{j}.png"))
+            del sample, pred
+            if j % 10 == 0:
+                gc.collect()
+    plt.close('all')
+    logger('info', f"Average processing time: {np.mean(TIME_LIST):.4f} seconds")
