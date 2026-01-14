@@ -30,5 +30,27 @@
         "classes_name_zh": ["未变化区域", "低植被", "无植被表面", "树木", "水", "建筑", "操场"],
         "classes_cmap": [[0, 0, 0], [0, 128, 0], [128, 128, 128], [0, 255, 0], [0, 0, 255], [128, 0, 0], [255, 0, 0]],
         "git_url": "https://github.com/DingLei14/SCanNet"
+    },
+    "ClearSCD": {
+        "model_path": "./res/ClearSCD_Hi-UCD-mini.onnx",
+        "model_size": 512,
+        "model_mean": [0.485, 0.456, 0.406],
+        "model_std": [0.229, 0.224, 0.225],
+        "classes_name": ["unlabeled", "Water", "grass", "building", "green house", "road", "bridge", "others", "bare land", "woodland"],
+        "classes_name_zh": ["未标记", "水体", "草地", "建筑", "温室", "道路", "桥梁", "其他", "裸地", "林地"],
+        "classes_cmap": [[0, 0, 0], [0, 153, 255], [202, 255, 122], [230, 0, 0], [230, 0, 255], [255, 230, 0], [255, 181, 197], [0, 255, 230], [175, 122, 255], [26, 255, 0]],
+        "git_url": "https://github.com/tangkai-RS/ClearSCD"
+    },
+    "DEFO": {
+        "model_path": "./res/DEFO_SECOND.onnx",
+        "model_size": 512,
+        "model_mean": [113.40, 114.08, 116.45],
+        "model_std": [48.30,  46.27,  48.14],
+        "model_mean2": [111.07, 114.04, 118.18],
+        "model_std2": [49.41,  47.01,  47.94],
+        "classes_name": ["NO CHANGE", "low_vegetation", "nvg_surface", "tree", "water", "Building", "Playground"],
+        "classes_name_zh": ["未变化区域", "低植被", "无植被表面", "树木", "水", "建筑", "操场"],
+        "classes_cmap": [[0, 0, 0], [0, 128, 0], [128, 128, 128], [0, 255, 0], [0, 0, 255], [128, 0, 0], [255, 0, 0]],
+        "git_url": "https://github.com/byyztgxz/Decoder_Fusion"
     }
 }

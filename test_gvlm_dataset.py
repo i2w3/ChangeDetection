@@ -15,7 +15,7 @@ from src import GVLM_CDataset, GVLM_Sample, FinalResult, logger
 
 def parse_args():
     parser = argparse.ArgumentParser(description="在 GVLM_CD 数据集上进行测试")
-    parser.add_argument("--model", "-m", type=str, help="使用的模型")
+    parser.add_argument("model", type=str, help="使用的模型")
     parser.add_argument("--dataset_path", "-dp", type=str, default="./res/data/GVLM_CD",
                         help="GVLM_CD 数据集路径")
     parser.add_argument("--sample_name", "-sn", type=str, default="A Luoi_Vietnam",
