@@ -1,3 +1,31 @@
+# file tree
+```bash
++---
+|   config.json # 所有模型的配置文件
+|   test_gvlm_dataset.py # 测试模型在 GVLM 数据集上的表现
+|   test_matcher.py # 测试图像匹配算法
+|   test_time.py # 解析 log，获取模型平均运行时间
++---images # 存放一些展示图
++---res # 存放数据集和模型路径
+|   \---data
+|       +---GVLM_CD # GVLM_CD 数据集格式
+|       |   \---<LAND_TYPE>
+|       |           im1.png
+|       |           im2.png
+|       |           ref.png
+|       +---SECOND # 按照 GVLM 数据集存放格式
+|       \---UAV
++---scripts # 一些模型转换脚本
+\---src
+    |   data_gen.py # 读数数据集
+    |   logger.py # 单例模式的 logger
+    |   matcher.py # 图像匹配算法
+    |   ort_runner.py # onnxruntime
+    |   trt_runner.py # tensorRT
+    |   
+    \---model # 继承 ort_runner.py 的模型运行代码
+```
+
 # model list
 all onnx model can download from [huggingface](https://huggingface.co/i2w3/model_zoo)
 

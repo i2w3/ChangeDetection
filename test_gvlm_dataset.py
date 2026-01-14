@@ -3,12 +3,11 @@ import gc
 import json
 import time
 from pathlib import Path
-from typing import List, Union, Optional
+from typing import List, Optional
 
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-from PIL import Image
 
 import src
 from src import GVLM_CDataset, GVLM_Sample, FinalResult, logger
@@ -107,7 +106,9 @@ def over_leap(config:dict, img_data:GVLM_Sample, mask_data:FinalResult) -> List[
     if img_A.shape[:2] != mask_1.shape[:2]:
         mask_bin = cv2.resize(mask_bin, (img_A.shape[1], img_A.shape[0]), interpolation=cv2.INTER_NEAREST)
         mask_1 = cv2.resize(mask_1, (img_A.shape[1], img_A.shape[0]), interpolation=cv2.INTER_NEAREST)
-        mask_2 = cv2.resize(mask_2, (img_A.shape[1], img_A.shape[0]), interpolation=cv2.INTER_NEAREST)
+        # mask_2 = cv2.resize(mask_2, (img_A.shape[1], img_A.shape[0]), interpolation=cv2.INTER_NEAREST) #TODO: shape img_B != img_A?
+    if img_B.shape[:2] != mask_2.shape[:2]:
+        mask_2 = cv2.resize(mask_2, (img_B.shape[1], img_B.shape[0]), interpolation=cv2.INTER_NEAREST)
     # 将 mask_1 不为 0 的区域，使用 config["classes_cmap"] 中对应的颜色进行替换
     color_mask_1 = np.zeros_like(img_A)
     color_mask_2 = np.zeros_like(img_B)
