@@ -135,7 +135,7 @@ if __name__ == "__main__":
     sample = dataset.sub_gen(args.sample_name, args.cut_size, args.seed)
     pred = model(sample.img_A, sample.img_B)
 
-    fig = plot_data(config[args.model], sample, pred, save_str="images/gvlm_result.png")
+    fig = plot_data(config[args.model], sample, pred, save_str=f"images/{args.model}-{Path(args.dataset_path).stem}-{args.sample_name}.png")
     plt.show()
 
     if not args.enable_more_test:

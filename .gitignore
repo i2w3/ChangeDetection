@@ -1,10 +1,13 @@
 __pycache__
 
 *.onnx
+*.pt
 
 logs/
 res/data/GVLM_CD
+res/data/LoveDA
 res/data/SE2020_CD
+res/data/SECOND_CD
 !res/data/GVLM_CD/README.md
 !res/data/SE2020_CD/README.md
 

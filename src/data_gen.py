@@ -87,4 +87,23 @@ class GVLM_CDataset:
                 img_ref = img_ref[yc - half_size: yc + half_size, xc - half_size: xc + half_size].copy(),
                 img_id  = sub_folder.name + "_{0}_{1}".format(xc, yc)
             )
-    
+
+
+class UAV_Dataset:
+    def __init__(self, data_root:Union[Path, str]):
+        if not isinstance(data_root, Path):
+            data_root = Path(data_root)
+        self.data_root = data_root
+
+    def sub_gen(self, sub_file:Union[Path, str]) -> np.ndarray:
+        '''读取数据集的子文件，随机裁剪数据
+        '''
+        if not isinstance(sub_file, Path):
+            sub_file = Path(sub_file)
+
+        img_path   = glob_img(self.data_root, sub_file)
+        img    = cv2.imread(str(img_path))
+        if img is None:
+            raise ValueError(f"Failed to read images.")
+        return img
+        
