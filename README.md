@@ -51,7 +51,7 @@ all onnx model can download from [huggingface](https://huggingface.co/i2w3/model
 
 | (3024, 4032, 3) | (3024, 4032, 3) + 裁剪子图(重叠 96 以消除边缘效应) | (3024, 4032, 3) 压缩 (1512, 2016, 3) + 裁剪子图 |
 | :-------------: | :--------------------------------------------: | :-------------------------------------------: |
-| ![](images\SS_EarthVQA-UAV2-im1-zt0-None.png) | ![](images\SS_EarthVQA-UAV2-im1-zt0-96.png) | ![](images\SS_EarthVQA-UAV2-im1-zt1-96.png) |
+| ![](images/SS_EarthVQA-UAV2-im1-zt0-None.png) | ![](images/SS_EarthVQA-UAV2-im1-zt0-96.png) | ![](images/SS_EarthVQA-UAV2-im1-zt1-96.png) |
 
 ## more model
 [open-cd](https://github.com/likyoo/open-cd) base on MMLab Toolkits
@@ -70,8 +70,8 @@ see `test_matcher.py` and `./src/matcher.py`
 | Method           |                 |
 | :-------------:  | :-------------: |
 | SIFT | SUFT |
-| ![](images\match_SIFT.png) | ![](images\match_SURF.png) |
+| ![](images/match_SIFT.png) | ![](images/match_SURF.png) |
 | ORB | ORB[CUDA] |
-| ![](images\match_ORB.png) | ![](images\match_ORB-cuda.png) |
+| ![](images/match_ORB.png) | ![](images/match_ORB-cuda.png) |
 | AKAZE |  |
-| ![](images\match_AKAZE.png) |  |
+| ![](images/match_AKAZE.png) |  |
