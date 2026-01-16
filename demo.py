@@ -1,13 +1,40 @@
-import cv2
-from ultralytics import YOLO
+import torch
+import segmentation_models_pytorch as smp
+
+model = smp.DeepLabV3Plus(encoder_name = "resnet50",
+                          encoder_weights = "imagenet",
+                          decoder_atrous_rates = (12,18,24),
+                          encoder_output_stride =16,
+                          classes = 5).eval()
+model.load_state_dict(torch.load("checkpoint.pt"))
+
+dummy_input = torch.randn(1, 3, 512, 512)
+output = model(dummy_input)
+print(output.shape)
 
 
-if __name__ == "__main__":
-    # Load a model
-    model = YOLO("./res/yolov8s-seg_LoveDA.pt")
+onnx_program = torch.onnx.export(
+    model, 
+    (dummy_input,), 
+    "./deeplabv3+_LandcoverAI.onnx",
+    export_params=True,
+    input_names=['input',],
+    output_names=['output_bin',],
+    opset_version=17,
+    external_data=False,
+    verbose=False
+)
 
-    # Perform inference on an image
-    results = model("./res/data/UAV2/im1.jpg", )
+jit_model = torch.jit.trace(model, (dummy_input,))
 
-    # Show the results
-    results[0].show()
+onnx_program = torch.onnx.export(
+    jit_model, 
+    (dummy_input,),
+    "./deeplabv3+_LandcoverAI_jit.onnx",
+    export_params=True,
+    input_names=['input',],
+    output_names=['output_bin',],
+    opset_version=17,
+    external_data=False,
+    verbose=False
+)

@@ -2,7 +2,8 @@
 ```bash
 +---
 |   config.json # 所有模型的配置文件
-|   test_gvlm_dataset.py # 测试模型在 GVLM 数据集上的表现
+|   test_gvlm_dataset.py # 测试变化检测模型在 GVLM 数据集格式上的表现
+|   test_uav_dataset.py # 测试语义分割模型再 UAV2 数据集格式上的表现
 |   test_matcher.py # 测试图像匹配算法
 |   test_time.py # 解析 log，获取模型平均运行时间
 +---images # 存放一些展示图
@@ -29,19 +30,25 @@
 # model list
 all onnx model can download from [huggingface](https://huggingface.co/i2w3/model_zoo)
 
-## [ClearSCD](https://github.com/tangkai-RS/ClearSCD)
-![](./images/ClearSCD.png)
+## [Semantic Change Detection]
+| Model           |                 |
+| :-------------: | :-------------: |
+| [ClearSCD](https://github.com/tangkai-RS/ClearSCD) | [DEFO](https://github.com/byyztgxz/Decoder_Fusion) |
+| ![](./images/CD_ClearSCD.png)                         | ![](./images/CD_DEFO.png)                             |
+| [SCanNet](https://github.com/DingLei14/SCanNet) | [SE2020](https://github.com/LiheYoung/SenseEarth2020-ChangeDetection) |
+| ![](./images/CD_SCanNet.png)                       | ![](./images/CD_SE2020.png)                                              |
 
-## [DEFO](https://github.com/byyztgxz/Decoder_Fusion)
-![](./images/DEFO.png)
+## [Remote sensing semantic segmentation]
+运行逻辑：由于直接输入原图，会在模型预处理被压缩成 512*512，效果很差(左列)，所以可以采用裁剪子图拼接(中列，按照图块大小为 512，步长为 416(意味着图块与图块之间会有 96 像素大小的区域重叠) 进行裁剪，随后逐个图块计算语义值概率，最后叠加计算总图语义)，但是子图中物体太大，所以最好再做一次原图分辨率压缩(模拟原始数据集的物体大小, zt 2 表示压缩两次)
 
-## [SCanNet](https://github.com/DingLei14/SCanNet)
-![](./images/SCanNet.png)
+一些比较合适的数据集：[LoveDA](https://github.com/Junjue-Wang/LoveDA)、[EarthVQA](https://github.com/Junjue-Wang/EarthVQA)、[FloodNet](https://www.kaggle.com/datasets/aletbm/aerial-imagery-dataset-floodnet-challenge)、[DroneDeploy](https://www.kaggle.com/datasets/mightyrains/drone-deploy-medium-dataset)
 
-## [SE2020](https://github.com/LiheYoung/SenseEarth2020-ChangeDetection)
-![](./images/SE2020.png)
+### [EarthVQA]
+| (3024, 4032, 3) | (3024, 4032, 3) + 裁剪子图(重叠 96 以消除边缘效应) | (3024, 4032, 3) 压缩 (1512, 2016, 3) + 裁剪子图 |
+| :-------------: | :-------------: | :-------------: |
+| ![](images\SS_EarthVQA-UAV2-im1-zt0-None.png) | ![](images\SS_EarthVQA-UAV2-im1-zt0-96.png) | ![](images\SS_EarthVQA-UAV2-im1-zt1-96.png) |
 
-# more model
+## more model
 [open-cd](https://github.com/likyoo/open-cd) base on MMLab Toolkits
 
 [sota-cd](https://hyper.ai/cn/sota/tasks/change-detection)
@@ -52,26 +59,13 @@ all onnx model can download from [huggingface](https://huggingface.co/i2w3/model
 
 [Change-Detection-Review](https://github.com/MinZHANG-WHU/Change-Detection-Review)
 
-## SECOND DATASET
-|               Model               |  mIoU |  SeK  | Score | Status                  |
-| :-------------------------------: | :---: | :---: | :---: | :---------------------: |
-|                TaCo               | 73.77 | 24.73 | 39.44 | No Code                 |
-|               DaCDF               | 72.30 | 21.88 | 37.00 | No Git                  |
-|             UniChange             | 72.85 | 23.02 | 37.97 | No Code                 |
-|              GSTM-SCD             | 73.61 | 24.36 | 39.13 | Mamba-base, have weight |
-|                FoBa               | 74.50 | 24.61 | 39.58 | Mamba-base, have weight |
-|              Mamba-FCS            | 74.07 | 25.50 | 40.07 | No Git                  |
-|             AWMambaSCD            | 73.66 | 24.95 | 39.56 | No Git                  |
-|               BT-SCD              | 73.67 | 24.21 | 39.04 | No Git                  |
-|               STGNet              | 72.83 | 22.45 | 37.56 | No Git                  |
-| SCanNet + CBAM + L<sub>Dice</sub> | 73.63 | 24.25 | 39.06 | No weight               |
-|               SCNet               | 73.85 | 23.99 | 38.95 | wait GDrive Assess      |
-|             VFM-ReSCD             | 73.33 | 24.01 | 38.81 | No weight               |
-|            Semantic-CD            | 75.10 | 23.85 | 39.23 | No Git                  |
-|             MamabaSCD             | 73.68 | 22.92 | 38.15 | Mamba-base, have weight |
-|              SCD-SAM              | 77.75 | 32.44 | 46.03 | SAM-base, have weight   |
-|              LSAFNet              | 74.01 | 24.32 | 39.23 | No weight               |
-|               HGINet              |   --  |   --  |   --  | No weight               |
-|            DEFO-MLTSCD            | 73.76 | 23.73 | 38.74 | `PASS`                  |
-|               DFINet              | 72.61 | 20.12 | 35.87 | No Git                  |
-|              SCanNet              | 73.42 | 23.94 | 38.78 | `PASS`                  |
+# Image matching
+see `test_matcher.py` and `./src/matcher.py`
+| Method           |                 |
+| :-------------: | :-------------: |
+| SIFT | SUFT |
+| ![](images\match_SIFT.png) | ![](images\match_SURF.png) |
+| ORB | ORB[CUDA] |
+| ![](images\match_ORB.png) | ![](images\match_ORB-cuda.png) |
+| AKAZE |  |
+| ![](images\match_AKAZE.png) |  |

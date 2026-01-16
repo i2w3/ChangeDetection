@@ -57,7 +57,7 @@ class LoveDA(ORTRunner):
                 for idx_w, w_s in enumerate(w_steps):
                     w_e = w_s + model_size
                     img = image[h_s: h_e, w_s: w_e, :]
-                    # cv2.imwrite(f"./logs/temp_{idx_h}_{idx_w}.png", img)
+                    cv2.imwrite(f"./logs/temp_{idx_h}_{idx_w}.png", img)
                     input_blob = self.preProcess(img)
                     outputs_blob:list = self.session.run(self.outputs, {"input": input_blob})
 
@@ -79,5 +79,21 @@ class LoveDA(ORTRunner):
     
 
 class EarthVQA(LoveDA):
+    def __init__(self, config:dict):
+        super().__init__(config)
+
+    def preProcess(self, img:np.ndarray) -> np.ndarray:
+        shape = img.shape[:2]
+        input_size = (self.config["model_size"], self.config["model_size"])
+        if shape[0] != self.config["model_size"] or shape[1] != self.config["model_size"]:
+            img = cv2.resize(img, input_size)
+        mean_array = np.array(self.config["model_mean"], np.float32).reshape(1,3,1,1)
+        std_array  = np.array(self.config["model_std"] , np.float32).reshape(1,3,1,1)
+        blob = cv2.dnn.blobFromImage(img, scalefactor=1.0/255.0,size=input_size,mean=(0,0,0),swapRB=True,ddepth=cv2.CV_32F) # only swapRB + scale
+        blob = (blob - mean_array) / std_array
+        return blob
+    
+
+class KaggleDeepLabV3Plus(EarthVQA):
     def __init__(self, config:dict):
         super().__init__(config)

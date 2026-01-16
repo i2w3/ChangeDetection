@@ -104,30 +104,28 @@ if __name__ == "__main__":
     print(f"{'ZIP ' * args.zip_times}Sample shape: {sample.shape}")
     pred = model(sample, over_lap=args.over_lap)
 
-    fig = plot_data(config[args.model], sample, pred, save_str=f"images/{args.model}-{Path(args.dataset_path).stem}-{args.sample_name}.png")
-    plt.show()
+    fig = plot_data(config[args.model], sample, pred, 
+                    save_str=f"images/SS_{args.model}-{Path(args.dataset_path).stem}-{args.sample_name}-{'zt' + str(args.zip_times)}-{str(args.over_lap)}.png")
+    # plt.show()
 
     if not args.enable_more_test:
         raise SystemExit("Only run single test!")
     
-    # # 进行更多测试
-    # TIME_LIST = []
-    # LAND_TYPE = [x.name for x in dataset.data_root.iterdir() if x.is_dir()]
-    # fig = plt.figure(figsize=(15, 10))
-    # for i in LAND_TYPE:
-    #     SAVE_PATH = Path("images") / Path(i)
-    #     SAVE_PATH.mkdir(parents=True, exist_ok=True)
-    #     for j in range(args.run_time):
-    #         sample = dataset.sub_gen(i, args.cut_size, j)
-    #         start_time = time.time()
-    #         pred = model(sample.img_A, sample.img_B)
-            
-    #         end_time = time.time()
-    #         TIME_LIST.append(end_time - start_time)
-            
-    #         plot_data(config[args.model], sample, pred, fig=fig, save_str=str(SAVE_PATH / f"{i}-{j}.png"))
-    #         del sample, pred
-    #         if j % 10 == 0:
-    #             gc.collect()
-    # plt.close('all')
-    # logger('info', f"Average processing time: {np.mean(TIME_LIST):.4f} seconds")
+    # 进行更多测试
+    TIME_LIST = []
+    LAND_TYPE = [x.stem for x in dataset.data_root.iterdir() if x.is_file()]
+    fig = plt.figure(figsize=(15, 10))
+    for i in LAND_TYPE:
+        sample = dataset.sub_gen(i)
+        start_time = time.time()
+        print(f"Sample shape: {sample.shape}")
+        for _ in range(args.zip_times):
+            sample = cv2.resize(sample, (sample.shape[1] // 2, sample.shape[0] // 2))
+        print(f"{'ZIP ' * args.zip_times}Sample shape: {sample.shape}")
+        pred = model(sample, over_lap=args.over_lap)
+        end_time = time.time()
+        TIME_LIST.append(end_time - start_time)   
+        plot_data(config[args.model], sample, pred, fig=fig, 
+                  save_str=f"images/SS_{args.model}-{Path(args.dataset_path).stem}-{i}-{'zt' + str(args.zip_times)}-{str(args.over_lap)}.png")
+    plt.close('all')
+    logger('info', f"Average processing time: {np.mean(TIME_LIST):.4f} seconds")

@@ -39,17 +39,17 @@ class ORTRunner:
         so = ort.SessionOptions()
         so.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL # 启用所有优化
         providers = [
-            # ('TensorrtExecutionProvider', {
-            #     'device_id': 0,
-            #     'trt_max_workspace_size': 4 * 1024 * 1024 * 1024, # 4 GB
-            #     'trt_int8_enable': False,
-            #     'trt_fp16_enable': True,
-            #     'trt_engine_cache_enable': True,
-            #     'trt_engine_cache_path': f'{Path(self.config["model_path"]).parent}/trt_cache',
-            #     'trt_timing_cache_enable': True, # timing cache 加速在其它设备上建立 engine
-            #     'trt_timing_cache_path': f'{Path(self.config["model_path"]).parent}/trt_cache/time_cache',
-            #     'trt_force_timing_cache': False, # 仅在与生成 timing cache 的 GPU 型号完全相同的 GPU 上使用
-            # }),
+            ('TensorrtExecutionProvider', {
+                'device_id': 0,
+                'trt_max_workspace_size': 4 * 1024 * 1024 * 1024, # 4 GB
+                'trt_int8_enable': False,
+                'trt_fp16_enable': True,
+                'trt_engine_cache_enable': True,
+                'trt_engine_cache_path': f'{Path(self.config["model_path"]).parent}/trt_cache',
+                'trt_timing_cache_enable': True, # timing cache 加速在其它设备上建立 engine
+                'trt_timing_cache_path': f'{Path(self.config["model_path"]).parent}/trt_cache/time_cache',
+                'trt_force_timing_cache': False, # 仅在与生成 timing cache 的 GPU 型号完全相同的 GPU 上使用
+            }),
             ('CUDAExecutionProvider', {
                 'device_id': 0,
                 'arena_extend_strategy': 'kNextPowerOfTwo',

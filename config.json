@@ -54,7 +54,7 @@
         "git_url": "https://github.com/byyztgxz/Decoder_Fusion"
     },
     "LoveDA": {
-        "model_path": "./res/LoveDA_LoveDA.onnx",
+        "model_path": "./res/hrnetw32_LoveDA.onnx",
         "model_size": 512,
         "model_mean": [123.675, 116.28, 103.53],
         "model_std": [58.395,  57.12,  57.375],
@@ -66,12 +66,22 @@
     "EarthVQA": {
         "model_path": "./res/sfpnr50_EarthVQA.onnx",
         "model_size": 512,
-        "model_mean": [123.675, 116.28, 103.53],
-        "model_std": [58.395,  57.12,  57.375],
+        "model_mean": [0.485, 0.456, 0.406],
+        "model_std": [0.229, 0.224, 0.225],
         "classes_name": ["Background", "Building", "Road", "Water", "Barren", "Forest", "Agricultural", "Playground"],
         "classes_name_zh": ["背景", "建筑", "道路", "水", "裸地", "森林", "农业", "操场"],
         "classes_cmap": [[0, 0, 0], [255, 0, 0], [255, 255, 0], [0, 0, 255], [159, 129, 183], [0, 255, 0], [255, 195, 128], [165, 0, 165]],
         "git_url": "https://github.com/Junjue-Wang/EarthVQA",
         "download_link": "https://pan.baidu.com/s/1VBS4IHzA9w9mwLfqUxiN6A?pwd=2333"
+    },
+    "KaggleDeepLabV3Plus": {
+        "model_path": "./res/deeplabv3+_LandcoverAI.onnx",
+        "model_size": 512,
+        "model_mean": [0.485, 0.456, 0.406],
+        "model_std": [0.229, 0.224, 0.225],
+        "classes_name": ["Background", "Building", "Woodland", "Water", "Road"],
+        "classes_name_zh": ["背景", "建筑", "林地", "水体", "道路"],
+        "classes_cmap": [[0, 0, 0], [255, 0, 0], [0, 128, 0], [0, 0, 255], [255, 255, 255]],
+        "git_url": "https://www.kaggle.com/code/chrisnick92/deeplearning-on-landcoverai/notebook"
     }
 }
