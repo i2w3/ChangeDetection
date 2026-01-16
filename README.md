@@ -1,4 +1,5 @@
 # file tree
+
 ```bash
 +---
 |   config.json # 所有模型的配置文件
@@ -28,9 +29,11 @@
 ```
 
 # model list
+
 all onnx model can download from [huggingface](https://huggingface.co/i2w3/model_zoo)
 
-## [Semantic Change Detection]
+## Semantic Change Detection
+
 | Model           |                 |
 | :-------------: | :-------------: |
 | [ClearSCD](https://github.com/tangkai-RS/ClearSCD) | [DEFO](https://github.com/byyztgxz/Decoder_Fusion) |
@@ -38,14 +41,16 @@ all onnx model can download from [huggingface](https://huggingface.co/i2w3/model
 | [SCanNet](https://github.com/DingLei14/SCanNet) | [SE2020](https://github.com/LiheYoung/SenseEarth2020-ChangeDetection) |
 | ![](./images/CD_SCanNet.png)                       | ![](./images/CD_SE2020.png)                                              |
 
-## [Remote sensing semantic segmentation]
+## Remote sensing semantic segmentation
+
 运行逻辑：由于直接输入原图，会在模型预处理被压缩成 512*512，效果很差(左列)，所以可以采用裁剪子图拼接(中列，按照图块大小为 512，步长为 416(意味着图块与图块之间会有 96 像素大小的区域重叠) 进行裁剪，随后逐个图块计算语义值概率，最后叠加计算总图语义)，但是子图中物体太大，所以最好再做一次原图分辨率压缩(模拟原始数据集的物体大小, zt 2 表示压缩两次)
 
 一些比较合适的数据集：[LoveDA](https://github.com/Junjue-Wang/LoveDA)、[EarthVQA](https://github.com/Junjue-Wang/EarthVQA)、[FloodNet](https://www.kaggle.com/datasets/aletbm/aerial-imagery-dataset-floodnet-challenge)、[DroneDeploy](https://www.kaggle.com/datasets/mightyrains/drone-deploy-medium-dataset)
 
-### [EarthVQA]
+### EarthVQA
+
 | (3024, 4032, 3) | (3024, 4032, 3) + 裁剪子图(重叠 96 以消除边缘效应) | (3024, 4032, 3) 压缩 (1512, 2016, 3) + 裁剪子图 |
-| :-------------: | :-------------: | :-------------: |
+| :-------------: | :--------------------------------------------: | :-------------------------------------------: |
 | ![](images\SS_EarthVQA-UAV2-im1-zt0-None.png) | ![](images\SS_EarthVQA-UAV2-im1-zt0-96.png) | ![](images\SS_EarthVQA-UAV2-im1-zt1-96.png) |
 
 ## more model
@@ -61,8 +66,9 @@ all onnx model can download from [huggingface](https://huggingface.co/i2w3/model
 
 # Image matching
 see `test_matcher.py` and `./src/matcher.py`
+
 | Method           |                 |
-| :-------------: | :-------------: |
+| :-------------:  | :-------------: |
 | SIFT | SUFT |
 | ![](images\match_SIFT.png) | ![](images\match_SURF.png) |
 | ORB | ORB[CUDA] |
