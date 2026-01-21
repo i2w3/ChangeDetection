@@ -22,11 +22,17 @@ class LoveDA(ORTRunner):
         return blob
 
     def postProcess(self, outputs_blob:List[np.ndarray]) -> np.ndarray:
-        output_bin = outputs_blob[0]
+        if len(outputs_blob) == 1:
+            # only one output
+            output_bin = outputs_blob[0]
+        elif len(outputs_blob) == 2:
+            # light-train type model
+            output_bin = outputs_blob[1]
+        else:
+            raise ValueError(f"Unexpected number of outputs: {len(outputs_blob)}")
         np_bin = np.argmax(output_bin, axis=1).astype(np.uint8)
         return np_bin[0]
         
-    
     def infer(self, image: np.ndarray, over_lap:Optional[int] = None) -> np.ndarray:
         start_time = time.time()
         if over_lap is not None:
@@ -57,12 +63,17 @@ class LoveDA(ORTRunner):
                 for idx_w, w_s in enumerate(w_steps):
                     w_e = w_s + model_size
                     img = image[h_s: h_e, w_s: w_e, :]
-                    cv2.imwrite(f"./logs/temp_{idx_h}_{idx_w}.png", img)
+                    # cv2.imwrite(f"./logs/temp_{idx_h}_{idx_w}.png", img)
                     input_blob = self.preProcess(img)
-                    outputs_blob:list = self.session.run(self.outputs, {"input": input_blob})
+                    outputs_blob:list = self.session.run(self.outputs, {k: input_blob.astype(v["dtype"]) for k, v in self.inputs.items()})
 
                     # 获取 logits
-                    logits = outputs_blob[0] # list[np.ndarray] -> C, H, W
+                    if len(outputs_blob) == 0:
+                        logits = outputs_blob[0] # list[np.ndarray] -> C, H, W
+                    elif len(outputs_blob) == 2:
+                        logits = outputs_blob[1]
+                    else:
+                        raise ValueError(f"Unexpected number of outputs: {len(outputs_blob)}")
                     logits = softmax(logits)
                     full_probs[:, h_s: h_e, w_s: w_e] += logits[0]
                     count_map[:, h_s: h_e, w_s: w_e] += 1
@@ -71,7 +82,7 @@ class LoveDA(ORTRunner):
             output = np.argmax(full_probs, axis=0).astype(np.uint8)
         else:
             input_blob = self.preProcess(image)
-            outputs_blob:list = self.session.run(self.outputs, {"input": input_blob})
+            outputs_blob:list = self.session.run(self.outputs, {k: input_blob.astype(v["dtype"]) for k, v in self.inputs.items()})
             output = self.postProcess(outputs_blob)
         end_time = time.time()
         logger('info', f"Inference time: {end_time - start_time:.3f} seconds")
@@ -95,5 +106,15 @@ class EarthVQA(LoveDA):
     
 
 class KaggleDeepLabV3Plus(EarthVQA):
+    def __init__(self, config:dict):
+        super().__init__(config)
+
+
+class UNet(EarthVQA):
+    def __init__(self, config:dict):
+        super().__init__(config)
+
+
+class DeepLabV3Plus(EarthVQA):
     def __init__(self, config:dict):
         super().__init__(config)

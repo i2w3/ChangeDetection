@@ -66,19 +66,32 @@ class ORTRunner:
         load_time_ms = (end_time - start_time) * 1000
         logger("info", f"Model loaded in {load_time_ms:.2f} ms.")
         # print name
-        self.inputs_with_dummy = {}
+        self.inputs = {}
         self.outputs = []
-        logger("info", "model input name:")
-        for input_name in self.session.get_inputs():
-            logger("info", f"\t{input_name.name} - {input_name.shape}")
-            self.inputs_with_dummy[input_name.name] = np.zeros(input_name.shape, dtype=np.float32)
-        logger("info", "model outputs name:")
+        logger("info", "model input data:")
+        for input_data in self.session.get_inputs():
+            input_name = input_data.name
+            input_type = input_data.type
+            input_shape = input_data.shape
+            logger("info", f"\t{input_name} - {input_type}[{input_shape}]")
+            input_shape = [1] + list(input_shape[1:])
+            if input_type == "tensor(float16)":
+                input_dtype = np.float16
+            elif input_type == "tensor(float)":
+                input_dtype = np.float32
+            else:
+                raise ValueError(f"Unsupported input data type: {input_type}")
+            self.inputs[input_name] = {"type": input_type, 
+                                       "dtype": input_dtype,
+                                       "shape": input_shape, 
+                                       "dummy": np.zeros(input_shape, dtype=input_dtype)}
+        logger("info", "model outputs data:")
         for output_name in self.session.get_outputs():
             logger("info", f"\t{output_name.name} - {output_name.shape}")
             self.outputs.append(output_name.name)
         # warm up
         start_time = time.time()
-        self.session.run(None, self.inputs_with_dummy)
+        self.session.run(None, {k: v["dummy"] for k, v in self.inputs.items()})
         end_time = time.time()
         load_time_ms = (end_time - start_time) * 1000
         logger("info", f"Model warm up in {load_time_ms:.2f} ms.")
@@ -93,7 +106,8 @@ class ORTRunner:
             img = cv2.resize(img, input_size)
         mean_array = np.array(self.config["model_mean"], np.float32).reshape(1,3,1,1)
         std_array  = np.array(self.config["model_std"] , np.float32).reshape(1,3,1,1)
-        blob = cv2.dnn.blobFromImage(img, scalefactor=1.0/255.0,size=input_size,mean=(0,0,0),swapRB=True,ddepth=cv2.CV_32F) # only swapRB and scale
+        # swapRB and scale to [0,1]
+        blob = cv2.dnn.blobFromImage(img, scalefactor=1.0/255.0,size=input_size,mean=(0,0,0),swapRB=True,ddepth=cv2.CV_32F)
         blob = (blob - mean_array) / std_array
         return blob
     
@@ -116,7 +130,7 @@ class ORTRunner:
         result = self.postProcess(outputs_blob)
         postProcess_time = time.time() - start_time
         
-        logger("info", f"Average Pre-Process Time:  {preProcess_time*1000:.2f} ms")
-        logger("info", f"Average Inference Time:   {inference_time*1000:.2f} ms")
+        logger("info", f"Average Pre-Process Time: {preProcess_time*1000:.2f} ms")
+        logger("info", f"Average Inference Time: {inference_time*1000:.2f} ms")
         logger("info", f"Average Post-Process Time: {postProcess_time*1000:.2f} ms")
         return result

@@ -54,7 +54,7 @@
         "git_url": "https://github.com/byyztgxz/Decoder_Fusion"
     },
     "LoveDA": {
-        "model_path": "./res/hrnetw32_LoveDA.onnx",
+        "model_path": "./res/model.onnx",
         "model_size": 512,
         "model_mean": [123.675, 116.28, 103.53],
         "model_std": [58.395,  57.12,  57.375],
@@ -83,5 +83,25 @@
         "classes_name_zh": ["背景", "建筑", "林地", "水体", "道路"],
         "classes_cmap": [[0, 0, 0], [255, 0, 0], [0, 128, 0], [0, 0, 255], [255, 255, 255]],
         "git_url": "https://www.kaggle.com/code/chrisnick92/deeplearning-on-landcoverai/notebook"
+    },
+    "UNet": {
+        "model_path": "./res/DeepLabV3Plus-efficientnet-b7-dd.onnx",
+        "model_size": 512,
+        "model_mean": [0.485, 0.456, 0.406],
+        "model_std": [0.229, 0.224, 0.225],
+        "classes_name": ["IGNORE", "BUILDING", "CLUTTER", "VEGETATION", "WATER", "GROUND"],
+        "classes_name_zh": ["忽略", "建筑", "杂物", "植被", "水体", "地面"],
+        "classes_cmap": [[0, 0, 0], [75, 25, 230], [180,  30, 145], [75,  180,  60], [48,  130, 245], [255, 255, 255]],
+        "git_url": "https://github.com/dronedeploy/dd-ml-segmentation-benchmark"
+    },
+    "DeepLabV3Plus": {
+        "model_path": "./res/merged.onnx",
+        "model_size": 512,
+        "model_mean": [0.485, 0.456, 0.406],
+        "model_std": [0.229, 0.224, 0.225],
+        "classes_name": ["Background", "Building", "Road", "Water", "Tree", "Grass"],
+        "classes_name_zh": ["背景", "建筑", "道路", "水", "树木", "草地"],
+        "classes_cmap": [[0, 0, 0], [75, 25, 230], [180,  30, 145], [75,  180,  60], [48,  130, 245], [255, 255, 255]],
+        "git_url": "https://github.com/dronedeploy/dd-ml-segmentation-benchmark"
     }
 }

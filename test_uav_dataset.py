@@ -24,8 +24,8 @@ def parse_args():
                         help="数据集路径下子样本名称，默认读取 ./res/data/UAV2/im1* 文件")
     parser.add_argument("--over_lap", "-ol", type=int, default=None,
                         help="是否在裁切图片时加入 over_lap，以消除边缘效应，None 则表示全图预测，over_lap 为 0 表示不重叠裁切，大于 0 则表示重叠裁切")
-    parser.add_argument("--zip_times", "-zt", type=int, default=2,
-                        help="对输入图像进行压缩的次数，每次压缩为原来的一半，默认压缩两次")
+    parser.add_argument("--zip_times", "-zt", type=int, default=1,
+                        help="对输入图像进行压缩的次数，每次压缩为原来的一半，默认压缩一次")
     parser.add_argument("--enable_more_test", "-emt", action="store_true",
                         help="是否进行更多的测试")
     parser.add_argument("--config_path", type=str, default="./config.json",
