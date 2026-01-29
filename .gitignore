@@ -3,6 +3,7 @@ __pycache__
 *.engine
 *.onnx
 *.pt
+*.pdf
 
 logs/
 res/data/GVLM_CD
