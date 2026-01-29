@@ -3,7 +3,7 @@ import gc
 import json
 import time
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import cv2
 import matplotlib.pyplot as plt
@@ -44,6 +44,12 @@ def plot_data(config:dict,
         fig = plt.figure(figsize=(15, 10))
     fig.clf() # 清除之前的内容
     axes = fig.subplots(2, 2)
+    mask, img = over_leap(config, img_data, mask_data)
+    contour_dict = get_contour(img_data, mask_data)
+    for k, v in contour_dict.items():
+        color_rgb = config["classes_cmap"][k]
+        color_bgr = (color_rgb[2], color_rgb[1], color_rgb[0])
+        cv2.polylines(img_data, v, isClosed=True, color=color_bgr, thickness=50)
     ## Row 1
     axes[0,0].imshow(cv2.cvtColor(img_data, cv2.COLOR_BGR2RGB))
     axes[0,0].set_title("img")
@@ -55,7 +61,6 @@ def plot_data(config:dict,
     axes[0,1].axis('off')
     axes[0,1].legend(handles=legend_elements, loc='center', fontsize='large')
     ## Row 2
-    mask, img = over_leap(config, img_data, mask_data)
     axes[1,0].imshow(img)
     axes[1,0].set_title("mask_img")
     axes[1,0].axis('off')
@@ -83,8 +88,30 @@ def over_leap(config:dict, img_data:np.ndarray, mask_data:np.ndarray) -> List[np
         else:
             color_mask[mask_data == i] = color
     # 将 mask_data 不为 0 的区域，使用 255 替换
-    mask_data_bin = np.where(mask_data == 0, 0, 255).astype(np.uint8)
+    mask_data_bin = np.where(mask_data <= 0, 0, 255).astype(np.uint8)
     return [mask_data_bin,color_mask]
+
+
+def get_contour(image:np.ndarray, mask: np.ndarray) -> Dict[int, List[np.ndarray]]:
+    h, w = image.shape[:2]
+    h_ratio = h / mask.shape[0]
+    w_ratio = w / mask.shape[1]
+
+    num_classes = 8
+    contour_dict = {}
+    for i in range(1, num_classes):
+        binary = (mask == i).astype(np.uint8)
+        contours, _ = cv2.findContours(binary,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+        if len(contours) > 0:
+            scaled_contours = []
+            for cnt in contours:
+                cnt = cnt.astype(np.float32)
+                # scale mask to image
+                cnt[:, 0, 0] *= w_ratio
+                cnt[:, 0, 1] *= h_ratio
+                scaled_contours.append(cnt.astype(np.int32))
+            contour_dict[i] = scaled_contours
+    return contour_dict
 
 
 if __name__ == "__main__":
@@ -103,7 +130,8 @@ if __name__ == "__main__":
         sample = cv2.resize(sample, (sample.shape[1] // 2, sample.shape[0] // 2))
     print(f"{'ZIP ' * args.zip_times}Sample shape: {sample.shape}")
     pred = model(sample, over_lap=args.over_lap)
-
+    print(np.unique(pred))
+    
     fig = plot_data(config[args.model], sample, pred, 
                     save_str=f"images/SS_{args.model}-{Path(args.dataset_path).stem}-{args.sample_name}-{'zt' + str(args.zip_times)}-{str(args.over_lap)}.png")
     # plt.show()

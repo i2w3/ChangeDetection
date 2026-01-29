@@ -1,3 +1,6 @@
+'''
+语义分割类型的模型
+'''
 from typing import List, Optional
 
 import numpy as np
@@ -68,7 +71,7 @@ class LoveDA(ORTRunner):
                     outputs_blob:list = self.session.run(self.outputs, {k: input_blob.astype(v["dtype"]) for k, v in self.inputs.items()})
 
                     # 获取 logits
-                    if len(outputs_blob) == 0:
+                    if len(outputs_blob) == 1:
                         logits = outputs_blob[0] # list[np.ndarray] -> C, H, W
                     elif len(outputs_blob) == 2:
                         logits = outputs_blob[1]
@@ -105,16 +108,9 @@ class EarthVQA(LoveDA):
         return blob
     
 
-class KaggleDeepLabV3Plus(EarthVQA):
+class EoMT(EarthVQA):
     def __init__(self, config:dict):
         super().__init__(config)
-
-
-class UNet(EarthVQA):
-    def __init__(self, config:dict):
-        super().__init__(config)
-
-
-class DeepLabV3Plus(EarthVQA):
-    def __init__(self, config:dict):
-        super().__init__(config)
+        '''
+        EoMT 基于 lightly-train 框架训练，其逻辑已经内置在 LoveDA 类中
+        '''

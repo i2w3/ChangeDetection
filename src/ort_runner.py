@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+
 from typing import List
 from pathlib import Path
 import time
@@ -8,6 +8,7 @@ import numpy as np
 import onnxruntime as ort
 
 from .logger import logger
+from .utils import FinalResult
 
 
 def softmax(x:np.ndarray, axis:int=1):
@@ -24,32 +25,26 @@ def sigmoid(x:np.ndarray):
     return 1 / (1 + np.exp(-x))
 
 
-@dataclass
-class FinalResult:
-    mask_bin: np.ndarray
-    mask_1: np.ndarray
-    mask_2: np.ndarray
-
-
 class ORTRunner:
     def __init__(self, config:dict):
         self.config = config
         self.color_map = [c for sublist in self.config["classes_cmap"] for c in sublist]  # [num_classes, 3] -> [num_classes * 3]
+        
         # setting ort environment
         so = ort.SessionOptions()
         so.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL # 启用所有优化
         providers = [
-            ('TensorrtExecutionProvider', {
-                'device_id': 0,
-                'trt_max_workspace_size': 4 * 1024 * 1024 * 1024, # 4 GB
-                'trt_int8_enable': False,
-                'trt_fp16_enable': True,
-                'trt_engine_cache_enable': True,
-                'trt_engine_cache_path': f'{Path(self.config["model_path"]).parent}/trt_cache',
-                'trt_timing_cache_enable': True, # timing cache 加速在其它设备上建立 engine
-                'trt_timing_cache_path': f'{Path(self.config["model_path"]).parent}/trt_cache/time_cache',
-                'trt_force_timing_cache': False, # 仅在与生成 timing cache 的 GPU 型号完全相同的 GPU 上使用
-            }),
+            # ('TensorrtExecutionProvider', {
+            #     'device_id': 0,
+            #     'trt_max_workspace_size': 4 * 1024 * 1024 * 1024, # 4 GB
+            #     'trt_int8_enable': False,
+            #     'trt_fp16_enable': True,
+            #     'trt_engine_cache_enable': True,
+            #     'trt_engine_cache_path': f'{Path(self.config["model_path"]).parent}/trt_cache',
+            #     'trt_timing_cache_enable': True, # timing cache 加速在其它设备上建立 engine
+            #     'trt_timing_cache_path': f'{Path(self.config["model_path"]).parent}/trt_cache/time_cache',
+            #     'trt_force_timing_cache': False, # 仅在与生成 timing cache 的 GPU 型号完全相同的 GPU 上使用
+            # }),
             ('CUDAExecutionProvider', {
                 'device_id': 0,
                 'arena_extend_strategy': 'kNextPowerOfTwo',
@@ -59,12 +54,14 @@ class ORTRunner:
             }),
             ('CPUExecutionProvider', {})
         ]
+
         # load ONNX model, and try to convert to TensorRT engine
         start_time = time.time()
         self.session = ort.InferenceSession(self.config["model_path"], sess_options=so, providers=providers)
         end_time = time.time()
         load_time_ms = (end_time - start_time) * 1000
         logger("info", f"Model loaded in {load_time_ms:.2f} ms.")
+
         # print name
         self.inputs = {}
         self.outputs = []
@@ -89,6 +86,7 @@ class ORTRunner:
         for output_name in self.session.get_outputs():
             logger("info", f"\t{output_name.name} - {output_name.shape}")
             self.outputs.append(output_name.name)
+        
         # warm up
         start_time = time.time()
         self.session.run(None, {k: v["dummy"] for k, v in self.inputs.items()})

@@ -2,11 +2,14 @@ from typing import List
 
 import numpy as np
 
-from ..ort_runner import ORTRunner, FinalResult
+# from ..ort_runner import ORTRunner, FinalResult
 from ..ort_runner import softmax
 
 
-class SE2020(ORTRunner):
+from ..trt_runner import TRTRunner, FinalResult
+
+
+class SE2020(TRTRunner):
     def __init__(self, config:dict):
         super().__init__(config)
 
