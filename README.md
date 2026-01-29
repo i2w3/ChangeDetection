@@ -45,7 +45,7 @@ all onnx model can download from [huggingface](https://huggingface.co/i2w3/model
 
 运行逻辑：由于直接输入原图，会在模型预处理被压缩成 512*512，效果很差(左列)，所以可以采用裁剪子图拼接(中列，按照图块大小为 512，步长为 416(意味着图块与图块之间会有 96 像素大小的区域重叠) 进行裁剪，随后逐个图块计算语义值概率，最后叠加计算总图语义)，但是子图中物体太大，所以最好再做一次原图分辨率压缩(模拟原始数据集的物体大小, zt 2 表示压缩两次)
 
-一些比较合适的数据集：[LoveDA](https://github.com/Junjue-Wang/LoveDA)、[EarthVQA](https://github.com/Junjue-Wang/EarthVQA)、[FloodNet](https://www.kaggle.com/datasets/aletbm/aerial-imagery-dataset-floodnet-challenge)、[DroneDeploy](https://www.kaggle.com/datasets/mightyrains/drone-deploy-medium-dataset)
+一些比较合适的数据集：[LoveDA](https://github.com/Junjue-Wang/LoveDA)、[EarthVQA](https://github.com/Junjue-Wang/EarthVQA)、~~[FloodNet](https://www.kaggle.com/datasets/aletbm/aerial-imagery-dataset-floodnet-challenge)~~(道路识别不准，树木与草地容易混淆)、~~[DroneDeploy](https://www.kaggle.com/datasets/mightyrains/drone-deploy-medium-dataset)~~(语义类别不平均, 建筑偏工业)
 
 ### EarthVQA
 

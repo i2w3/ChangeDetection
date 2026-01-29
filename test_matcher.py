@@ -11,10 +11,10 @@ from src import GVLM_CDataset, Matcher
 def parse_args():
     parser = argparse.ArgumentParser(description="TODO")
     parser.add_argument("method", type=str, help="使用的方法")
-    parser.add_argument("--dataset_path", "-dp", type=str, default="./res/data/UAV",
+    parser.add_argument("--dataset_path", "-dp", type=str, default="./res/data/UAV_CD",
                         help="UAV 数据集路径")
     parser.add_argument("--sample_name", "-sn", type=str, default="demo4",
-                        help="数据集路径下子样本名称，默认读取 ./res/data/UAV/demo4 文件夹下的数据")
+                        help="数据集路径下子样本名称，默认读取 ./res/data/UAV_CD/demo4 文件夹下的数据")
     parser.add_argument("--enable_cuda", "-cuda", action="store_true",
                         help="是否启用 cuda 加速")
     parser.add_argument("--num_features", "-nf", type=int, default=10000,
@@ -39,8 +39,8 @@ if __name__ == "__main__":
         mask_A, mask_B = Matcher.get_mask(sample.img_A, sample.img_B, ov1, ov2)
         r_A = Matcher.get_rotate_crop_image(sample.img_A, ov1)
         r_B = Matcher.get_rotate_crop_image(sample.img_B, ov2)
-        # cv2.imwrite("overlap_mask_A.png", r_A)
-        # cv2.imwrite("overlap_mask_B.png", r_B)
+        cv2.imwrite("overlap_mask_A.png", r_A)
+        cv2.imwrite("overlap_mask_B.png", r_B)
         
         fig = plt.figure(figsize=(15, 10))
         axes = fig.subplots(2, 3)
